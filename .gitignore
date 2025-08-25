@@ -761,8 +761,9 @@ fabric.properties
 .fvm/version
 .fvm/versions/3.32.0
 
-# Markdown files (except README.md and doc/*.md)
+# Markdown files (except README.md, doc/*.md, and CHANGELOG.md)
 *.md
 !README.md
 !doc/*.md
+!CHANGELOG.md
 .venv/**
