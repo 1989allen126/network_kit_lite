@@ -1,0 +1,54 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Musspark (develop)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "--dart-define",
+        "DART_DEFINE_APP_ENV=develop",
+        "--dart-define",
+        "DART_DEFINE_GLOBAL_ENV=true"
+      ]
+    },
+    {
+      "name": "Musspark (test)",
+      "request": "launch",
+      "type": "dart",
+      "args": ["--dart-define", "DART_DEFINE_APP_ENV=test"]
+    },
+    {
+      "name": "Musspark (sandbox)",
+      "request": "launch",
+      "type": "dart",
+      "args": ["--dart-define", "DART_DEFINE_APP_ENV=sandbox"]
+    },
+    {
+      "name": "Musspark (production)",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "--dart-define",
+        "DART_DEFINE_APP_ENV=production",
+        "--dart-define",
+        "DART_DEFINE_GLOBAL_ENV=false"
+      ]
+    },
+    {
+      "name": "Musspark (profile mode)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile"
+    },
+    {
+      "name": "Musspark (release mode)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release"
+    }
+  ]
+}
