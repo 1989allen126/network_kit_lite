@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:network_kit_lite/network_kit_lite.dart';
 import 'package:network_kit_lite/src/core/base/base_response.dart';
 import 'package:network_kit_lite/src/core/cache/cache_storage.dart';
+import 'package:network_kit_lite/src/core/interceptors/auth_interceptor.dart';
 import 'package:network_kit_lite/src/utils/params_creator.dart';
 import 'package:network_kit_lite/src/utils/type_safety_utils.dart';
 
@@ -191,18 +192,21 @@ class DioClient {
           ),
         ),
 
-        // 2. 缓存拦截器
+        // 2. 授权拦截器
+        if(enableAuth) AuthInterceptor(),
+
+        // 3. 缓存拦截器
         if (enableCache)
           await _createCacheInterceptor(cacheType, lruCapacity, cacheDuration),
 
-        // 3. 日志拦截器（调试模式）
+        // 4. 日志拦截器（调试模式）
         if (kDebugMode && enableLogging)
           logInterceptor ?? LoggingInterceptor(),
 
-        // 4. 超时拦截器
+        // 5. 超时拦截器
         TimeoutInterceptor(),
 
-        // 5. 自定义拦截器（最低优先级）
+        // 6. 自定义拦截器（最低优先级）
         ...interceptors,
       ]);
 

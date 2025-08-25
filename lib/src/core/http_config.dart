@@ -10,9 +10,10 @@ class HttpAuthTokenConfig {
   final String Function()? getToken;
   final void Function()? clearToken;
   final void Function()? onTokenExpired;
+  final void Function(String token)? updateToken;
+  final void Function(String? path)? triggerLogin;
 
   final Map<String, String>? Function()? getAppCommonHeaders;
-  // final Future<void> Function(String token)? saveToken;
 
   const HttpAuthTokenConfig({
     required this.keyForToken,
@@ -21,7 +22,9 @@ class HttpAuthTokenConfig {
     this.getToken,
     this.clearToken,
     this.onTokenExpired,
-    this.getAppCommonHeaders
+    this.getAppCommonHeaders,
+    this.updateToken,
+    this.triggerLogin,
   });
 }
 

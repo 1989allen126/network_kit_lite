@@ -761,9 +761,10 @@ fabric.properties
 .fvm/version
 .fvm/versions/3.32.0
 
-# Markdown files (except README.md)
+# Markdown files (except README.md and doc/*.md)
 *.md
 !README.md
+!doc/*.md
 .cursor/rules/dart_flutter_rules.mdc
 .cursor/rules/dialog_language.mdc
 .cursor/rules/flutter_rules.mdc
