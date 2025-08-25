@@ -65,6 +65,7 @@ class ErrorCodeIntl {
         }
       } catch (e) {
         print('⚠️ 本地化回调函数执行失败: $e');
+        rethrow;
       }
     }
 

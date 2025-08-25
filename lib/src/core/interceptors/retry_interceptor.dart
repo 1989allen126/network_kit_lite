@@ -318,7 +318,7 @@ class RetryInterceptor extends Interceptor {
   /// 获取本地化消息
   String _getLocalizedMessage(String key, String fallback) {
     try {
-      return ErrorCodeIntl.getMessage(key) ?? fallback;
+      return ErrorCodeIntl.getMessage(key);
     } catch (e) {
       if (kDebugMode) {
         print('⚠️ 国际化消息获取失败: $key, 使用默认消息: $fallback');

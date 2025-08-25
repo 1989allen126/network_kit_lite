@@ -237,7 +237,7 @@ class AppException implements Exception {
     if (requestId != null) {
       buffer.write('\n请求ID: $requestId');
     }
-    buffer.write('\n时间戳: ${timestamp?.toIso8601String() ?? "未知"}');
+    buffer.write('\n时间戳: ${timestamp.toIso8601String()}');
     return buffer.toString();
   }
 
@@ -328,7 +328,7 @@ class AppException implements Exception {
       'message': message,
       'bizCode': bizCode,
       'bizMessage': bizMessage,
-      'timestamp': timestamp?.toIso8601String(),
+      'timestamp': timestamp.toIso8601String(),
       'requestId': requestId,
       'isNetworkError': isNetworkError,
       'isClientError': isClientError,
