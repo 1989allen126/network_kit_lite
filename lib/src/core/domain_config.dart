@@ -10,11 +10,10 @@ class DomainConfig {
   // 默认配置
   static final Map<String, dynamic> _defaultConfig = {
     "api": {
-      "develop2": "http://192.168.1.183:8135",
-      "develop": "https://api.musspark.com",
-      "test": "http://bk1.onmovemusic.com:8135",
-      "sandbox": "https://api-sandbox.musspark.com",
-      "production": "https://api-t.musspark.com"
+      "develop": "https://api.test.com",
+      "test": "http://bk1.test.com:8135",
+      "sandbox": "https://api-t.test.com",
+      "production": "https://api.test.com"
     }
   };
 
