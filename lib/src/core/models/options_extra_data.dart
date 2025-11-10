@@ -1,48 +1,61 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
-
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:network_kit_lite/network_kit_lite.dart';
-import 'package:network_kit_lite/src/core/cache/cache_policy.dart';
 
-class OptionsExtraData {
-  // 缓存策略
-  CachePolicy cachePolicy = CachePolicy.networkOnly;
-  // 缓存时间
-  Duration cacheDuration = const Duration(minutes: 5);
-  // 重试配置
-  bool shouldRetry = false;
-  // 重试次数
-  int maxRetries = 3;
-  // 端点信息
-  APIEndpoint? endpoint;
+part 'options_extra_data.freezed.dart';
 
-  OptionsExtraData({
-    this.cachePolicy = CachePolicy.networkOnly,
-    this.cacheDuration = const Duration(minutes: 5),
-    this.shouldRetry = false,
-    this.maxRetries = 3,
-    this.endpoint
-  });
+/// 请求选项额外数据
+@freezed
+class OptionsExtraData with _$OptionsExtraData {
+  const factory OptionsExtraData({
+    /// 缓存策略
+    @Default(CachePolicy.networkOnly) CachePolicy cachePolicy,
 
-  factory OptionsExtraData.copyWith({
+    /// 打印日志
+    @Default(true) bool enableLogging,
+
+    /// 缓存时间
+    @Default(Duration(minutes: 5)) Duration cacheDuration,
+
+    /// 重试配置
+    @Default(false) bool shouldRetry,
+
+    /// 重试次数
+    @Default(3) int maxRetries,
+
+    /// 是否跳过 Auth 鉴权校验导致的退出登录
+    /// 当设置为 true 时，即使鉴权失败（如 401），也不会清除 token 和触发登录回调
+    /// 适用于部分接口报错不影响 App 正常使用的场景
+    @Default(false) bool skipAuthLogout,
+  }) = _OptionsExtraData;
+
+  /// 从 APIEndpoint 创建 OptionsExtraData
+  factory OptionsExtraData.fromEndpoint({
     required APIEndpoint endPoint,
     bool customTimeOut = false,
+    bool enableLogging = true,
   }) {
-    // 只有自定义超时的时候（customTimeOut=true）, endpoint才会被赋值
-    return OptionsExtraData()
-      ..endpoint = customTimeOut ? endPoint:null
-      ..cachePolicy = endPoint.cachePolicy
-      ..cacheDuration = endPoint.cacheDuration
-      ..shouldRetry = endPoint.shouldRetry
-      ..maxRetries = endPoint.maxRetries;
+    return OptionsExtraData(
+      cachePolicy: endPoint.cachePolicy,
+      cacheDuration: endPoint.cacheDuration,
+      shouldRetry: endPoint.shouldRetry,
+      maxRetries: endPoint.maxRetries,
+      enableLogging: enableLogging,
+      skipAuthLogout: endPoint.skipAuthLogout,
+    );
   }
+}
 
+/// OptionsExtraData 扩展方法
+extension OptionsExtraDataExtension on OptionsExtraData {
+  /// 转换为Map（用于 Dio Options.extra）
   Map<String, dynamic> toMap() {
-    return <String, dynamic>{
+    return {
       'cachePolicy': cachePolicy,
       'cacheDuration': cacheDuration,
       'shouldRetry': shouldRetry,
       'maxRetries': maxRetries,
-      'endpoint':endpoint
+      'enableLogging': enableLogging,
+      'skipAuthLogout': this.skipAuthLogout,
     };
   }
 }

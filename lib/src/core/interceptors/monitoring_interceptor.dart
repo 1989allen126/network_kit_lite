@@ -44,7 +44,7 @@ class MonitoringInterceptor extends Interceptor {
       if (monitorRequestSize && options.data != null) {
         final requestSize = _calculateDataSize(options.data);
         if (enableDetailedLogging && requestSize > 0) {
-          print('📤 [MonitoringInterceptor] Request size: ${_formatBytes(requestSize)}');
+          print('[MonitoringInterceptor] Request size: ${_formatBytes(requestSize)}');
         }
       }
 
@@ -53,7 +53,7 @@ class MonitoringInterceptor extends Interceptor {
       
     } catch (e) {
       if (kDebugMode) {
-        print('⚠️ [MonitoringInterceptor] Error in onRequest: $e');
+        print('[MonitoringInterceptor] Error in onRequest: $e');
       }
     }
 
@@ -70,7 +70,7 @@ class MonitoringInterceptor extends Interceptor {
         if (monitorResponseSize) {
           responseSize = _calculateDataSize(response.data);
           if (enableDetailedLogging && responseSize > 0) {
-            print('📥 [MonitoringInterceptor] Response size: ${_formatBytes(responseSize)}');
+            print('[MonitoringInterceptor] Response size: ${_formatBytes(responseSize)}');
           }
         }
 
@@ -88,7 +88,7 @@ class MonitoringInterceptor extends Interceptor {
       }
     } catch (e) {
       if (kDebugMode) {
-        print('⚠️ [MonitoringInterceptor] Error in onResponse: $e');
+        print('[MonitoringInterceptor] Error in onResponse: $e');
       }
     }
 
@@ -108,13 +108,13 @@ class MonitoringInterceptor extends Interceptor {
         );
 
         if (enableDetailedLogging) {
-          print('💥 [MonitoringInterceptor] Request failed: ${err.requestOptions.method} ${err.requestOptions.uri}');
-          print('   Error: ${_formatError(err)}');
+          print('[MonitoringInterceptor] Request failed: ${err.requestOptions.method} ${err.requestOptions.uri}');
+          print('  Error: ${_formatError(err)}');
         }
       }
     } catch (e) {
       if (kDebugMode) {
-        print('⚠️ [MonitoringInterceptor] Error in onError: $e');
+        print('[MonitoringInterceptor] Error in onError: $e');
       }
     }
 
@@ -139,7 +139,7 @@ class MonitoringInterceptor extends Interceptor {
       }
     } catch (e) {
       if (kDebugMode) {
-        print('⚠️ [MonitoringInterceptor] Error calculating data size: $e');
+        print('[MonitoringInterceptor] Error calculating data size: $e');
       }
       return 0;
     }
@@ -184,22 +184,22 @@ class MonitoringInterceptor extends Interceptor {
     if (requestTime != null) {
       final duration = DateTime.now().difference(requestTime).inMilliseconds;
       if (duration > 5000) {
-        print('🐌 [MonitoringInterceptor] Slow request detected: ${uri} (${duration}ms)');
+        print('[MonitoringInterceptor] Slow request detected: ${uri} (${duration}ms)');
       }
     }
 
     // 检查响应大小
     if (responseSize != null && responseSize > 1024 * 1024) { // 1MB
-      print('📦 [MonitoringInterceptor] Large response detected: ${uri} (${_formatBytes(responseSize)})');
+      print('[MonitoringInterceptor] Large response detected: ${uri} (${_formatBytes(responseSize)})');
     }
 
     // 检查状态码
     final statusCode = response.statusCode;
     if (statusCode != null) {
       if (statusCode >= 400 && statusCode < 500) {
-        print('🚫 [MonitoringInterceptor] Client error: ${uri} ($statusCode)');
+        print('[MonitoringInterceptor] Client error: ${uri} ($statusCode)');
       } else if (statusCode >= 500) {
-        print('💥 [MonitoringInterceptor] Server error: ${uri} ($statusCode)');
+        print('[MonitoringInterceptor] Server error: ${uri} ($statusCode)');
       }
     }
   }

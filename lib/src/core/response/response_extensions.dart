@@ -1,5 +1,4 @@
 import 'package:network_kit_lite/network_kit_lite.dart';
-import '../api_endpoint.dart';
 
 /// API响应扩展，提供更简洁的请求和解析方式
 extension APIResponseExtension<T> on APIEndpoint {

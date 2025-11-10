@@ -1,16 +1,9 @@
 import 'dart:math';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:network_kit_lite/src/utils/network_connectivity.dart';
 import 'package:network_kit_lite/src/i18n/error_code_intl.dart';
-
-enum RetryPolicy {
-  fixed, // 固定间隔
-  linear, // 线性递增
-  exponential, // 指数递增
-  jitter, // 带抖动的指数递增
-  random, // 随机间隔
-}
+import 'package:network_kit_lite/src/utils/network_connectivity.dart';
 
 /// 智能重试配置
 class SmartRetryConfig {
@@ -35,16 +28,15 @@ class SmartRetryConfig {
     this.statusCodeRetryCount = const {
       408: 2, // 请求超时
       429: 3, // 频率限制
-      500: 3, // 服务器错误
-      502: 3, // 网关错误
-      503: 3, // 服务不可用
-      504: 3, // 网关超时
+      // 注意：只有超时（408）和频率限制（429）才需要延迟重试
+      // 其他错误（404、500、502、503、504等）不应该重试
     },
     this.exceptionTypeRetryCount = const {
-      DioExceptionType.connectionTimeout: 2,
-      DioExceptionType.sendTimeout: 2,
-      DioExceptionType.receiveTimeout: 2,
-      DioExceptionType.connectionError: 3,
+      // 只有超时相关的异常类型才需要延迟重试
+      DioExceptionType.connectionTimeout: 2, // 连接超时
+      DioExceptionType.sendTimeout: 2, // 发送超时
+      DioExceptionType.receiveTimeout: 2, // 接收超时
+      // 注意：connectionError 等其他错误不应该重试
     },
   });
 }
@@ -70,21 +62,11 @@ class RetrySuggestion {
 class RetryInterceptor extends Interceptor {
   final Dio dio;
   final SmartRetryConfig config;
-  final RetryPolicy policy;
-  final List<int> retryStatusCodes;
-  final List<DioExceptionType> retryExceptionTypes;
   final NetworkConnectivity _networkConnectivity = NetworkConnectivity();
 
   RetryInterceptor({
     required this.dio,
     SmartRetryConfig? config,
-    this.policy = RetryPolicy.exponential,
-    this.retryStatusCodes = const [500, 502, 503, 504],
-    this.retryExceptionTypes = const [
-      DioExceptionType.connectionTimeout,
-      DioExceptionType.sendTimeout,
-      DioExceptionType.receiveTimeout,
-    ],
   }) : config = config ?? const SmartRetryConfig();
 
   @override
@@ -186,12 +168,19 @@ class RetryInterceptor extends Interceptor {
 
     if (error.response?.statusCode != null) {
       final statusCode = error.response!.statusCode!;
-      if (statusCode >= 500) {
-        reason = _getLocalizedMessage('retry_server_error', '服务器错误，建议重试');
-      } else if (statusCode == 408) {
-        reason = _getLocalizedMessage('retry_timeout', '请求超时，建议重试');
-      } else if (statusCode == 429) {
-        reason = _getLocalizedMessage('retry_rate_limit', '请求频率过高，建议延迟重试');
+      // 根据配置判断是否需要重试，并生成相应的原因信息
+      if (config.statusCodeRetryCount.containsKey(statusCode)) {
+        // 根据状态码生成相应的原因信息
+        switch (statusCode) {
+          case 408:
+            reason = _getLocalizedMessage('retry_timeout', '请求超时，建议重试');
+            break;
+          case 429:
+            reason = _getLocalizedMessage('retry_rate_limit', '请求频率过高，建议延迟重试');
+            break;
+          default:
+            reason = _getLocalizedMessage('retry_network_error', '网络错误，建议重试');
+        }
       }
     } else {
       switch (error.type) {
@@ -199,12 +188,6 @@ class RetryInterceptor extends Interceptor {
         case DioExceptionType.sendTimeout:
         case DioExceptionType.receiveTimeout:
           reason = _getLocalizedMessage('retry_network_timeout', '网络超时，建议重试');
-          break;
-        case DioExceptionType.connectionError:
-          reason = _getLocalizedMessage('retry_connection_error', '网络连接错误，建议重试');
-          break;
-        case DioExceptionType.unknown:
-          reason = _getLocalizedMessage('retry_unknown_error', '未知网络错误，建议重试');
           break;
         default:
           reason = _getLocalizedMessage('retry_network_error', '网络错误，建议重试');
@@ -233,20 +216,18 @@ class RetryInterceptor extends Interceptor {
     // 根据状态码判断重试次数
     if (error.response?.statusCode != null) {
       final statusCode = error.response!.statusCode!;
-      final maxRetriesForStatusCode = config.statusCodeRetryCount[statusCode];
-      if (maxRetriesForStatusCode != null && currentRetryCount >= maxRetriesForStatusCode) {
-        return false;
-      }
 
-      // 客户端错误通常不应该重试，除非是特定的错误
-      if (statusCode >= 400 && statusCode < 500) {
-        return statusCode == 408 || statusCode == 429;
-      }
-
-      // 服务器错误（5xx）应该重试
-      if (statusCode >= 500 && statusCode < 600) {
+      // 根据配置判断是否需要重试
+      if (config.statusCodeRetryCount.containsKey(statusCode)) {
+        final maxRetriesForStatusCode = config.statusCodeRetryCount[statusCode];
+        if (maxRetriesForStatusCode != null && currentRetryCount >= maxRetriesForStatusCode) {
+          return false;
+        }
         return true;
       }
+
+      // 其他所有错误都不应该重试
+      return false;
     }
 
     // 根据异常类型判断重试次数
@@ -285,17 +266,16 @@ class RetryInterceptor extends Interceptor {
 
     // 重试网络相关的未知错误
     return message.contains('timeout') ||
-           message.contains('connection') ||
-           message.contains('network') ||
-           message.contains('dns') ||
-           message.contains('no route to host');
+        message.contains('connection') ||
+        message.contains('network') ||
+        message.contains('dns') ||
+        message.contains('no route to host');
   }
 
   /// 计算重试延迟时间
   Duration _calculateDelay(int retryCount) {
     // 指数退避算法
-    final exponentialDelay = config.baseDelay.inMilliseconds *
-        pow(config.backoffMultiplier, retryCount).toInt();
+    final exponentialDelay = config.baseDelay.inMilliseconds * pow(config.backoffMultiplier, retryCount).toInt();
 
     // 添加抖动
     final jitterRange = exponentialDelay * config.jitterFactor;

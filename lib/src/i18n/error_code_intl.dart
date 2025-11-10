@@ -107,6 +107,16 @@ class ErrorCodeIntl {
         return '禁止访问，没有权限';
       case 404:
         return '请求的资源不存在';
+      case 405:
+        return '请求方法不被允许';
+      case 408:
+        return '请求超时，请稍后重试';
+      case 409:
+        return '请求冲突，资源已存在';
+      case 422:
+        return '请求格式正确，但语义错误';
+      case 429:
+        return '请求过于频繁，请稍后重试';
       case 500:
         return '服务器内部错误';
       case 502:
@@ -116,6 +126,11 @@ class ErrorCodeIntl {
       case 504:
         return '网关超时';
       default:
+        if (statusCode >= 400 && statusCode < 500) {
+          return '客户端请求错误 ($statusCode)';
+        } else if (statusCode >= 500 && statusCode < 600) {
+          return '服务器错误 ($statusCode)';
+        }
         return '未知错误，状态码: $statusCode';
     }
   }

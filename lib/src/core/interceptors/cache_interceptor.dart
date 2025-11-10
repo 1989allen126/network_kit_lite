@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
@@ -55,8 +56,7 @@ class CacheInterceptor extends Interceptor {
           result = await _cacheManager.get(operation.key!);
           break;
         case CacheOperationType.save:
-          await _cacheManager.save(operation.key!, operation.data!,
-              duration: operation.duration);
+          await _cacheManager.save(operation.key!, operation.data!, duration: operation.duration);
           break;
         case CacheOperationType.clear:
           await _cacheManager.clear();
@@ -65,15 +65,15 @@ class CacheInterceptor extends Interceptor {
 
       // 处理操作结果
       _handleCacheOperationResult(CacheOperationResult(
-        operation.id,
-        operation.type,
+        operationId: operation.id,
+        type: operation.type,
         result: result,
         success: true,
       ));
     } catch (e) {
       _handleCacheOperationResult(CacheOperationResult(
-        operation.id,
-        operation.type,
+        operationId: operation.id,
+        type: operation.type,
         error: e.toString(),
         success: false,
       ));
@@ -113,8 +113,7 @@ class CacheInterceptor extends Interceptor {
   }
 
   // 后台更新缓存的方法
-  Future<void> _updateCacheInBackground(
-      RequestOptions options, String cacheKey, Duration cacheDuration) async {
+  Future<void> _updateCacheInBackground(RequestOptions options, String cacheKey, Duration cacheDuration) async {
     try {
       // 创建一个新的请求，避免干扰主请求流程
       final newOptions = options.copyWith(
@@ -187,14 +186,11 @@ class CacheInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final cachePolicy =
-        options.extra['cachePolicy'] as CachePolicy? ?? CachePolicy.networkOnly;
+    final cachePolicy = options.extra['cachePolicy'] as CachePolicy? ?? CachePolicy.networkOnly;
 
-    if (cachePolicy == CachePolicy.cacheFirst ||
-        cachePolicy == CachePolicy.cacheOnly) {
+    if (cachePolicy == CachePolicy.cacheFirst || cachePolicy == CachePolicy.cacheOnly) {
       final cacheKey = _generateCacheKey(options);
-      final cacheDuration =
-          options.extra['cacheDuration'] as Duration? ?? _defaultDuration;
+      final cacheDuration = options.extra['cacheDuration'] as Duration? ?? _defaultDuration;
 
       // 检查内存缓存
       final memoryCached = _checkMemoryCache(cacheKey, cacheDuration);
@@ -242,12 +238,8 @@ class CacheInterceptor extends Interceptor {
     Response response,
     ResponseInterceptorHandler handler,
   ) async {
-    final cachePolicy =
-        response.requestOptions.extra['cachePolicy'] as CachePolicy? ??
-            CachePolicy.networkOnly;
-    final cacheDuration =
-        response.requestOptions.extra['cacheDuration'] as Duration? ??
-            _defaultDuration;
+    final cachePolicy = response.requestOptions.extra['cachePolicy'] as CachePolicy? ?? CachePolicy.networkOnly;
+    final cacheDuration = response.requestOptions.extra['cacheDuration'] as Duration? ?? _defaultDuration;
 
     if (cachePolicy == CachePolicy.cacheFirst ||
         cachePolicy == CachePolicy.networkFirst ||
@@ -282,9 +274,7 @@ class CacheInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    final cachePolicy =
-        err.requestOptions.extra['cachePolicy'] as CachePolicy? ??
-            CachePolicy.networkOnly;
+    final cachePolicy = err.requestOptions.extra['cachePolicy'] as CachePolicy? ?? CachePolicy.networkOnly;
 
     // 对于CacheFirst策略，如果网络请求失败，尝试返回缓存
     if (cachePolicy == CachePolicy.cacheFirst) {
@@ -348,13 +338,13 @@ class CacheInterceptor extends Interceptor {
 
       if (err.response != null) {
         return handler.resolve(
-            Response(
-              requestOptions: err.requestOptions,
-              data: err.response?.data,
-              statusCode: err.response?.statusCode,
-              statusMessage: err.message,
-            ),
-          );
+          Response(
+            requestOptions: err.requestOptions,
+            data: err.response?.data,
+            statusCode: err.response?.statusCode,
+            statusMessage: err.message,
+          ),
+        );
       }
 
       return handler.next(err);

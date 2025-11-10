@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+
 import 'package:flutter/foundation.dart';
 
 /// 网络请求统计信息
@@ -127,10 +128,6 @@ class NetworkMonitor {
 
     _activeRequests[requestId] = performance;
 
-    if (kDebugMode) {
-      print('🚀 [NetworkMonitor] Request started: $method $url');
-    }
-
     return requestId;
   }
 
@@ -163,13 +160,6 @@ class NetworkMonitor {
     // 发送事件
     _requestStreamController.add(completedRequest);
     _updateStats();
-
-    if (kDebugMode) {
-      final status = completedRequest.isSuccess ? '✅' : '❌';
-      print('$status [NetworkMonitor] Request completed: '
-          '${completedRequest.method} ${completedRequest.url} '
-          '(${completedRequest.duration}ms, ${completedRequest.statusCode})');
-    }
   }
 
   /// 添加到历史记录
@@ -255,10 +245,6 @@ class NetworkMonitor {
   void clearHistory() {
     _requestHistory.clear();
     _updateStats();
-
-    if (kDebugMode) {
-      print('🧹 [NetworkMonitor] History cleared');
-    }
   }
 
   /// 获取性能报告
@@ -269,10 +255,7 @@ class NetworkMonitor {
         .map((r) => r.toMap())
         .toList();
 
-    final errorRequests = _requestHistory
-        .where((r) => r.isFailed)
-        .map((r) => r.toMap())
-        .toList();
+    final errorRequests = _requestHistory.where((r) => r.isFailed).map((r) => r.toMap()).toList();
 
     return {
       'stats': {

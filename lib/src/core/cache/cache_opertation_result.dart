@@ -1,48 +1,43 @@
-// 缓存响应类
-class CachedResponse {
-  final dynamic data;
-  final DateTime timestamp;
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  CachedResponse({required this.data, required this.timestamp});
+part 'cache_opertation_result.freezed.dart';
+
+/// 缓存响应类
+@freezed
+class CachedResponse with _$CachedResponse {
+  const factory CachedResponse({
+    required dynamic data,
+    required DateTime timestamp,
+  }) = _CachedResponse;
 }
 
-// 缓存操作类型
+/// 缓存操作类型
 enum CacheOperationType {
   get,
   save,
   clear,
 }
 
-// 缓存操作类
-class CacheOperation {
-  final String id;
-  final CacheOperationType type;
-  final String? key;
-  final dynamic data;
-  final Duration? duration;
-
-  CacheOperation({
-    required this.id,
-    required this.type,
-    this.key,
-    this.data,
-    this.duration,
-  });
+/// 缓存操作类
+@freezed
+class CacheOperation with _$CacheOperation {
+  const factory CacheOperation({
+    required String id,
+    required CacheOperationType type,
+    String? key,
+    dynamic data,
+    Duration? duration,
+  }) = _CacheOperation;
 }
 
-// 缓存操作结果类
-class CacheOperationResult {
-  final String operationId;
-  final CacheOperationType type;
-  final bool success;
-  final dynamic result;
-  final String? error;
-
-  CacheOperationResult(
-    this.operationId,
-    this.type, {
-    required this.success,
-    this.result,
-    this.error,
-  });
+/// 缓存操作结果类
+@freezed
+class CacheOperationResult with _$CacheOperationResult {
+  const factory CacheOperationResult({
+    required String operationId,
+    required CacheOperationType type,
+    required bool success,
+    dynamic result,
+    String? error,
+  }) = _CacheOperationResult;
 }
