@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.2 - 2025-11-10
+
+### Changed
+
+- 提升版本到 0.1.2，为发布到 pub.dev 做准备
+- 同步优化 pubspec 元数据（homepage、repository、issue_tracker）
+
+### Notes
+
+- 本次为维护版本，无功能代码变更
+
 ## 0.1.1
 
 ### Changed

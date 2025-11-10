@@ -1,6 +1,6 @@
 name: network_kit_lite
 description: A Dart package inspired by Moya style for Flutter, providing a clean and maintainable way to consume APIs.
-version: 0.1.1
+version: 0.1.2
 homepage: https://github.com/1989allen126/network_kit_lite
 repository: https://github.com/1989allen126/network_kit_lite
 issue_tracker: https://github.com/1989allen126/network_kit_lite/issues
