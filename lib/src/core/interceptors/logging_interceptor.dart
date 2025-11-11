@@ -5,17 +5,16 @@ import 'package:flutter/foundation.dart';
 import 'package:network_kit_lite/src/core/logging/network_log_manager.dart';
 
 class LoggingInterceptor extends Interceptor {
-  bool _enableLogging = true;
   final NetworkLogManager _logManager = NetworkLogManager();
   final Map<RequestOptions, String> _requestIds = {};
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     try {
-      _enableLogging = options.extra['enableLogging'] as bool? ?? true;
+      final enableLogging = options.extra['enableLogging'] as bool? ?? true;
       String? requestId;
 
-      if (kDebugMode && _enableLogging) {
+      if (kDebugMode && enableLogging) {
         final now = DateTime.now();
         final timestamp = _formatDate(now);
         _networkReceiveLogPrint('┌──────────────────────────────────────────────────────────────────────────');
@@ -88,7 +87,8 @@ class LoggingInterceptor extends Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     try {
-      if (kDebugMode && _enableLogging) {
+      final enableLogging = response.requestOptions.extra['enableLogging'] as bool? ?? true;
+      if (kDebugMode && enableLogging) {
         final now = DateTime.now();
         final timestamp = _formatDate(now);
         _networkReceiveLogPrint('┌──────────────────────────────────────────────────────────────────────────');
@@ -98,7 +98,14 @@ class LoggingInterceptor extends Interceptor {
         _networkReceiveLogPrint('└──────────────────────────────────────────────────────────────────────────');
         _networkReceiveLogPrint('┌──────────────────────────────────────────────────────────────────────────');
         _networkReceiveLogPrint('│ 响应体:');
-        _beautyPrint(_formatJson(response.data));
+        try {
+          final formattedJson = _formatJson(response.data);
+          _beautyPrint(formattedJson);
+        } catch (e) {
+          // 如果格式化失败，直接打印原始数据
+          _networkReceiveLogPrint('│ 格式化失败: $e');
+          _beautyPrint(response.data?.toString() ?? 'null');
+        }
         _networkReceiveLogPrint('└──────────────────────────────────────────────────────────────────────────');
       }
 
@@ -169,23 +176,14 @@ class LoggingInterceptor extends Interceptor {
 
   _beautyPrint(String content, {int limitLength = 100}) {
     void printLine(String message) {
-      if (message.length < limitLength) {
+      if (message.length <= limitLength) {
         _networkReceiveLogPrint('│ ${message}');
       } else {
-        var outStr = StringBuffer();
-        for (var index = 0; index < message.length; index++) {
-          outStr.write(message[index]);
-          if (index % limitLength == 0 && index != 0) {
-            final content = outStr.toString();
-            _networkReceiveLogPrint('│ ${content}');
-            outStr.clear();
-            var lastIndex = index + 1;
-            if (message.length - lastIndex < limitLength) {
-              final content = message.substring(lastIndex, message.length);
-              _networkReceiveLogPrint('│ ${content}');
-              break;
-            }
-          }
+        // 按 limitLength 分段打印
+        for (var i = 0; i < message.length; i += limitLength) {
+          final end = (i + limitLength < message.length) ? i + limitLength : message.length;
+          final segment = message.substring(i, end);
+          _networkReceiveLogPrint('│ ${segment}');
         }
       }
     }
@@ -206,7 +204,8 @@ class LoggingInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     try {
-      if (kDebugMode && _enableLogging) {
+      final enableLogging = err.requestOptions.extra['enableLogging'] as bool? ?? true;
+      if (kDebugMode && enableLogging) {
         final now = DateTime.now();
         final timestamp = _formatDate(now);
         _networkReceiveLogPrint('┌──────────────────────────────────────────────────────────────────────────');

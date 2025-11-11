@@ -27,8 +27,7 @@ class SmartRetryConfig {
     this.networkCheckTimeout = const Duration(seconds: 3),
     this.statusCodeRetryCount = const {
       408: 2, // 请求超时
-      429: 3, // 频率限制
-      // 注意：只有超时（408）和频率限制（429）才需要延迟重试
+      429: 2,// 注意：429错误（频率限制）不重试，避免加重服务器负担
       // 其他错误（404、500、502、503、504等）不应该重试
     },
     this.exceptionTypeRetryCount = const {
@@ -129,9 +128,21 @@ class RetryInterceptor extends Interceptor {
         print('❌ 智能重试失败 (${retryCount + 1}/${config.maxRetries}): $retryError');
       }
 
-      // 如果是最后一次重试失败，传递原始错误
+      // 如果是最后一次重试失败，传递最新的错误信息（而不是原始错误）
       if (retryCount + 1 >= config.maxRetries) {
-        return handler.next(err);
+        // 确保传递最新的错误信息，让调用层知道真正的失败原因
+        if (retryError is DioException) {
+          return handler.reject(retryError);
+        } else {
+          // 如果不是 DioException，创建一个新的 DioException 包装错误
+          final finalError = DioException(
+            requestOptions: err.requestOptions,
+            error: retryError,
+            type: DioExceptionType.unknown,
+            message: '$retryError',
+          );
+          return handler.reject(finalError);
+        }
       }
 
       // 继续重试循环
@@ -216,7 +227,6 @@ class RetryInterceptor extends Interceptor {
     // 根据状态码判断重试次数
     if (error.response?.statusCode != null) {
       final statusCode = error.response!.statusCode!;
-
       // 根据配置判断是否需要重试
       if (config.statusCodeRetryCount.containsKey(statusCode)) {
         final maxRetriesForStatusCode = config.statusCodeRetryCount[statusCode];
@@ -283,8 +293,9 @@ class RetryInterceptor extends Interceptor {
 
     final totalDelay = exponentialDelay + jitter.toInt();
 
-    // 确保不超过最大延迟
-    return Duration(milliseconds: totalDelay.clamp(0, config.maxDelay.inMilliseconds));
+    // 确保延迟在最小1秒和最大延迟之间
+    const int minDelayMs = 1000; // 最小延迟1秒
+    return Duration(milliseconds: totalDelay.clamp(minDelayMs, config.maxDelay.inMilliseconds));
   }
 
   int _getRetryCount(RequestOptions options) {

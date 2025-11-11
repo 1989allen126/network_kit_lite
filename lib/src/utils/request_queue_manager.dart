@@ -32,7 +32,9 @@ class RequestQueueManager {
 
   /// 执行请求
   /// [request] 请求函数
-  Future<T> execute<T>(Future<T> Function() request) async {
+  /// [requestId] 请求标识，用于区分不同的接口（如 URL path）
+  /// 相同 requestId 的请求会进行间隔控制，不同 requestId 可以并发执行
+  Future<T> execute<T>(Future<T> Function() request, {String? requestId}) async {
     /// 如果未启用请求队列，直接执行请求，不进行队列管理
     if (!enableRequestQueue) {
       return request();
@@ -42,6 +44,7 @@ class RequestQueueManager {
     _requestQueue.add(_QueuedRequest<T>(
       request: request,
       completer: completer,
+      requestId: requestId ?? 'default',
     ));
     _processQueue();
     return completer.future;
@@ -64,7 +67,8 @@ class RequestQueueManager {
   /// 执行请求
   Future<void> _executeRequest<T>(_QueuedRequest<T> queuedRequest) async {
     // 使用信号量控制并发数和请求间隔
-    await _semaphore.acquire();
+    // 只对相同 requestId 的请求进行间隔控制
+    await _semaphore.acquire(queuedRequest.requestId);
     try {
       // 执行请求
       final result = await queuedRequest.request();
@@ -75,7 +79,7 @@ class RequestQueueManager {
       }
     } finally {
       // 释放信号量
-      _semaphore.release();
+      _semaphore.release(queuedRequest.requestId);
       // 继续处理队列
       _processQueue();
     }
@@ -104,9 +108,11 @@ class RequestQueueManager {
 class _QueuedRequest<T> {
   final Future<T> Function() request;
   final Completer<T> completer;
+  final String requestId;
 
   _QueuedRequest({
     required this.request,
     required this.completer,
+    required this.requestId,
   });
 }

@@ -49,14 +49,21 @@ class RequestExecutor {
         }
       }
 
+      // 优先从请求头中获取 requestId，如果没有则从 URL 中提取
+      // 例如：GET /api/home/deviceInfo/1234567890
+      final requestId = _extractRequestId(url, options.method ?? 'GET', options.headers);
+
       // 使用队列管理器执行请求
-      return await _executeRequest(() => _dio.request(
-            url,
-            options: options,
-            queryParameters: queryParameters,
-            data: data,
-            cancelToken: token,
-          ));
+      return await _executeRequest(
+        () => _dio.request(
+          url,
+          options: options,
+          queryParameters: queryParameters,
+          data: data,
+          cancelToken: token,
+        ),
+        requestId: requestId,
+      );
     } finally {
       // 确保取消令牌被移除，无论请求成功或失败
       _cancelTokenManager.removeCancelToken(cancelToken);
@@ -64,11 +71,40 @@ class RequestExecutor {
   }
 
   /// 执行请求（通过队列管理器）
-  Future<T> _executeRequest<T>(Future<T> Function() request) async {
+  /// [request] 请求函数
+  /// [requestId] 请求标识，用于区分不同的接口
+  Future<T> _executeRequest<T>(Future<T> Function() request, {String? requestId}) async {
     if (_requestQueueManager != null) {
-      return _requestQueueManager!.execute(request);
+      return _requestQueueManager!.execute(request, requestId: requestId);
     }
     return request();
+  }
+
+  /// 提取请求标识
+  /// 优先从请求头中查找 requestId，如果没有则从 URL 中提取
+  /// [url] 请求URL
+  /// [method] HTTP方法
+  /// [headers] 请求头
+  String _extractRequestId(String url, String method, Map<String, dynamic>? headers) {
+    // 优先从请求头中查找 requestId
+    // 只检查 RequestId 或 requestId 字段（不带连字符）
+    if (headers != null) {
+      final requestIdFromHeader = headers['Request-Id'] ?? headers['RequestId'] ?? headers['requestId'];
+      if (requestIdFromHeader != null && requestIdFromHeader.toString().isNotEmpty) {
+        return requestIdFromHeader.toString();
+      }
+    }
+
+    // 如果请求头中没有，则从 URL 中提取（使用 method + path）
+    try {
+      final uri = Uri.parse(url);
+      // 使用 method + path 作为 requestId
+      // 例如：GET /api/home/getmydeviceselect
+      return '${method.toUpperCase()} ${uri.path}';
+    } catch (e) {
+      // 如果解析失败，使用整个 URL 作为 requestId
+      return '${method.toUpperCase()} $url';
+    }
   }
 
   /// 处理响应

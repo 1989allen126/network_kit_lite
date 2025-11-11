@@ -51,7 +51,7 @@ class HttpConfig {
   static const int defaultMaxConcurrentRequests = 6;
 
   /// 请求间隔时间
-  static const Duration defaultRequestInterval = Duration(milliseconds: 120);
+  static const Duration defaultRequestInterval = Duration(milliseconds: 200);
 
   /// 是否启用请求队列
   static const bool defaultEnableRequestQueue = true;

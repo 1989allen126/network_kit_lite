@@ -1,4 +1,5 @@
 import 'package:network_kit_lite/network_kit_lite.dart';
+import 'package:network_kit_lite/src/core/response/result_wrapper.dart';
 
 /// ResponseWrapper 扩展方法（同步版本）
 extension ResponseWrapperExtension<T> on ResponseWrapper<T> {

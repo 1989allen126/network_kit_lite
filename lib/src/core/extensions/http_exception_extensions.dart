@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:network_kit_lite/network_kit_lite.dart';
+import 'package:network_kit_lite/src/core/interceptors/retry_interceptor.dart';
 
 /// HTTP异常扩展，用于提取服务端错误消息
 extension HttpExceptionExtensions on Exception {
