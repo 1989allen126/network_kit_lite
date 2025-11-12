@@ -17,8 +17,8 @@
 
 ```yaml
 dependencies:
-  network_kit_lite: ^1.0.0
-  connectivity_plus: ^5.0.2
+  network_kit_lite: ^0.1.3
+  connectivity_plus: ^6.1.3
 ```
 
 ## 🚀 快速开始

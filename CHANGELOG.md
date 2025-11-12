@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.3 - 2025-11-12
+
+### Changed
+
+- 对齐 README 安装依赖版本到 `^0.1.3` 与最新 `connectivity_plus`
+- 更新发布元数据与文档，准备发布到 pub.dev
+
+### Notes
+
+- 维护版本，无功能代码变更
+
 ## 0.1.2 - 2025-11-10
 
 ### Changed
